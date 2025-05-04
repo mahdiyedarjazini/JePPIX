@@ -33,12 +33,13 @@ class AccountManager(models.Model):
     is_active = models.BooleanField(default=True)
     
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name}"
+        if self.user.first_name and self.user.last_name:
+            return f"{self.user.first_name} {self.user.last_name}"
+        return f"{self.user.username} (Account Manager)"
     
     def save(self, *args, **kwargs):
         """Ensure the user is in the account_manager group"""
         super().save(*args, **kwargs)
-        # I found out about Group from Claude LLM
         account_manager_group, created = Group.objects.get_or_create(name='account_manager')
         self.user.groups.add(account_manager_group)
 
@@ -54,7 +55,9 @@ class Customer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name}"
+        if self.user.first_name and self.user.last_name:
+            return f"{self.user.first_name} {self.user.last_name}"
+        return f"{self.user.username} (Customer)"
     
     def save(self, *args, **kwargs):
         """Ensure the user is in the customer group"""
