@@ -60,6 +60,8 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+staticfiles/
+media/
 
 # Flask stuff:
 instance/
@@ -172,3 +174,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# JePPIX specific
+.DS_Store
+*.swp
+*.swo
+.env.local
+.vscode/
+node_modules/
+.pytest_cache/
+coverage_html/
