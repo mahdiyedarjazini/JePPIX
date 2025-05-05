@@ -47,3 +47,16 @@ class Report(models.Model):
         
     def __str__(self):
         return f"{self.title} ({self.get_report_type_display()}, {self.year_from} {self.quarter_from} - {self.year_to} {self.quarter_to})"
+    
+    def save(self, *args, **kwargs):
+        """
+        Override save method to trigger statistics calculation when report is created or updated
+        """
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        # Import here to avoid circular imports
+        from stat_analysis.stat_utils import calculate_report_statistics
+        
+        # Calculate statistics for this report
+        calculate_report_statistics(self)
