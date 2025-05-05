@@ -86,6 +86,7 @@ class Order(models.Model):
     """
     Model representing customer orders.
     An order is created by a customer and managed by a specific account manager.
+    Each order belongs to a single Job for execution.
     """
     ORDER_STATUS_CHOICES = (
         ('draft', 'Draft'),
@@ -98,12 +99,16 @@ class Order(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
     account_manager = models.ForeignKey(AccountManager, on_delete=models.CASCADE, related_name='managed_orders')
+    job = models.ForeignKey('execution.Job', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='draft')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Fields to track completion time
+    completed_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         ordering = ['-created_at']
@@ -115,6 +120,17 @@ class Order(models.Model):
         """Calculate and update the total price of the order"""
         self.total_price = sum(item.price * item.quantity for item in self.items.all())
         self.save()
+    
+    def save(self, *args, **kwargs):
+        # If status changed to completed, update completed_at
+        if self.pk is not None:
+            old_instance = Order.objects.get(pk=self.pk)
+            if old_instance.status != 'completed' and self.status == 'completed':
+                self.completed_at = timezone.now()
+        elif self.status == 'completed':
+            self.completed_at = timezone.now()
+            
+        super().save(*args, **kwargs)
 
 
 class OrderItem(models.Model):
