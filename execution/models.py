@@ -31,7 +31,7 @@ class Job(models.Model):
     state = models.CharField(max_length=100, choices=STATE_CHOICES)
     job_type = models.CharField(max_length=20, choices=JOB_TYPE_CHOICES)
 
-    starting_date = models.DateTimeField()
+    starting_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     completion_time = models.FloatField(
         help_text="Time in days which were spent to complete the job.",
