@@ -4,6 +4,7 @@ from django.db.models import Avg, Count, Sum, F, ExpressionWrapper, fields
 from django.db import models
 from django.apps import apps
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 # Dynamic model imports to avoid circular imports
 def get_model(app_label, model_name):
@@ -49,7 +50,11 @@ def get_date_range_for_report(report):
     start_date = min(start_date_from, start_date_to)
     end_date = max(end_date_from, end_date_to)
     
-    return start_date, end_date
+    # Convert to datetime objects with time at 00:00:00 for start and 23:59:59 for end
+    start_datetime = timezone.make_aware(datetime.datetime.combine(start_date, datetime.time.min))
+    end_datetime = timezone.make_aware(datetime.datetime.combine(end_date, datetime.time.max))
+    
+    return start_datetime, end_datetime
 
 
 def calculate_job_statistics(report):
@@ -167,7 +172,7 @@ def calculate_order_statistics(report):
             'average_order_value': average_order_value,
             'orders_draft': orders_draft,
             'orders_submitted': orders_submitted,
-            'orders_in_progress': orders_in_progress,
+            'orders_in_progress': orders_in_period.filter(status='in_progress').count(),
             'orders_completed': orders_completed,
             'orders_cancelled': orders_cancelled,
             'avg_processing_time': avg_processing_time
@@ -181,7 +186,7 @@ def calculate_order_statistics(report):
         order_result.average_order_value = average_order_value
         order_result.orders_draft = orders_draft
         order_result.orders_submitted = orders_submitted
-        order_result.orders_in_progress = orders_in_progress
+        order_result.orders_in_progress = orders_in_period.filter(status='in_progress').count()
         order_result.orders_completed = orders_completed
         order_result.orders_cancelled = orders_cancelled
         order_result.avg_processing_time = avg_processing_time
