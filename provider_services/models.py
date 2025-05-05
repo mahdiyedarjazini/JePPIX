@@ -124,9 +124,14 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         # If status changed to completed, update completed_at
         if self.pk is not None:
-            old_instance = Order.objects.get(pk=self.pk)
-            if old_instance.status != 'completed' and self.status == 'completed':
-                self.completed_at = timezone.now()
+            try:
+                old_instance = Order.objects.get(pk=self.pk)
+                if old_instance.status != 'completed' and self.status == 'completed':
+                    self.completed_at = timezone.now()
+            except Order.DoesNotExist:
+                # Handle the case when the object is being created
+                if self.status == 'completed':
+                    self.completed_at = timezone.now()
         elif self.status == 'completed':
             self.completed_at = timezone.now()
             
